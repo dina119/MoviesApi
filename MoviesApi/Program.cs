@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using MoviesApi.Helpers;
 using MoviesApi.Models;
 using MoviesApi.Services;
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(
     );
 
 builder.Services.AddControllers();
+
+builder.Configuration.GetSection("JWT");
+builder.Services.AddIdentity<ApplicationUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddTransient<IGenresService,GenresService>();
 builder.Services.AddTransient<IMoviesService,MoviesService>();
 builder.Services.AddAutoMapper(typeof(Program));
