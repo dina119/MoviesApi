@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using NuGet.LibraryModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace MoviesApi.Models
@@ -9,7 +10,8 @@ namespace MoviesApi.Models
         public string FirstName { get;set;}
 
         [Required,MaxLength(50)]
-        public string LastName { get;set;}//
+        public string LastName { get;set;}
+        //hi malk
 
     }
 }
