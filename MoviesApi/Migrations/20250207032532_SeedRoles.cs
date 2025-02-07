@@ -14,7 +14,7 @@ namespace MoviesApi.Migrations
                 table:"AspNetRoles",
                 columns: new[] {"Id","Name","NormalizedName","ConcurrencyStamp"},
                 values: new object[] {Guid.NewGuid().ToString(),"User","User".ToUpper(),Guid.NewGuid().ToString()}
-                );//hi
+                );//hi dina
 
              migrationBuilder.InsertData(
                 table:"AspNetRoles",
