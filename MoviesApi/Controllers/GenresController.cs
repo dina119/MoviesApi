@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.Dto;
@@ -9,6 +10,7 @@ namespace MoviesApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class GenresController : ControllerBase
     {
         private readonly IGenresService _GenresService;
@@ -22,8 +24,9 @@ namespace MoviesApi.Controllers
             var genres=await _GenresService.GetAll();
             return Ok (genres);
         }
-
+        
         [HttpPost]
+        [Authorize]
          public async Task<IActionResult> CreteAllAsync(CreateGenersDto dto){
 
          var genre =new Genre

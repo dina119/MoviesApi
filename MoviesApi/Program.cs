@@ -1,10 +1,16 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MoviesApi.Helpers;
 using MoviesApi.Models;
 using MoviesApi.Services;
+using System.Configuration;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -26,6 +32,22 @@ builder.Services.AddTransient<IMoviesService,MoviesService>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
+builder.Services.AddAuthentication().AddJwtBearer(options =>
+    {
+        options.SaveToken=true;
+        options.RequireHttpsMetadata=false;
+        options.TokenValidationParameters=new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["JWT:Issuer"],
+            ValidateAudience=true,
+            ValidAudience = builder.Configuration["JWT:Audience"],
+            IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+        };
+    }
+
+    );
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 //Edit in swaggerGen,add Authorize,edit title,add description,service and terms,contact
@@ -43,7 +65,7 @@ builder.Services.AddSwaggerGen(options=>
             
         }
          });
-    options.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme
+    options.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme()
 
         {
         Name="Authorization",
