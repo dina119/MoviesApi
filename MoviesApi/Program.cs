@@ -106,8 +106,12 @@ builder.Services.AddAuthentication(
     }
 
     );
-builder.Services.AddCors();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -116,10 +120,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseStaticFiles();
+
 
 app.UseHttpsRedirection();
 //Add cors
-app.UseCors(c=>c.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
