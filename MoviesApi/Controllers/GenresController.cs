@@ -26,7 +26,7 @@ namespace MoviesApi.Controllers
         }
         
         [HttpPost]
-        [Authorize]
+         [Authorize(Roles ="Admin")]
          public async Task<IActionResult> CreteAllAsync(CreateGenersDto dto){
 
          var genre =new Genre
@@ -39,6 +39,7 @@ namespace MoviesApi.Controllers
             }
 
         [HttpPut("{id}")]
+          [Authorize(Roles ="Admin")]
          public async Task<IActionResult> UpdateAsync(byte id,[FromBody]CreateGenersDto dto)
         {
             var genre=await _GenresService.GetById(id);
@@ -51,6 +52,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpDelete("{id}")]
+          [Authorize(Roles ="Admin")]
          public async Task<IActionResult> Delete(byte id)
         {
             var genre=await _GenresService.GetById(id);

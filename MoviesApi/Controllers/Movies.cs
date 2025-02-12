@@ -56,6 +56,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles ="Admin")]
         public async Task<IActionResult> CreateAsync([FromForm]CreateMoviesDto dto){
 
             //Allow specific file extention to upload
@@ -80,6 +81,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles ="Admin")]
         public async Task<IActionResult> UpdateAsync(int id, [FromForm]CreateMoviesDto dto)
         {
              // To valied GenreID
@@ -111,6 +113,7 @@ namespace MoviesApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles ="Admin")]
         public async Task<IActionResult> deleteAsync(int id)
         {
          var movie = await _MoviesService.GetById(id);
