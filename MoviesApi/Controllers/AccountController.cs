@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.IdentityModel.Tokens;
 using MoviesApi.Dto;
 using MoviesApi.Models;
@@ -28,6 +29,11 @@ namespace MoviesApi.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register(RegisterUserDto UserDto)
         {
+           if(await _userManager.FindByEmailAsync(UserDto.Email) != null)
+            {
+                return  BadRequest(new {Message="Email is alerdy in use"});
+            }
+            else { 
             ApplicationUser user=new ApplicationUser();
             user.UserName=UserDto.UserName;
             user.Email=UserDto.Email;
@@ -42,6 +48,7 @@ namespace MoviesApi.Controllers
             else
             {
                 return BadRequest(ModelState);
+            }
             }
         }
 
