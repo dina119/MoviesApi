@@ -1,25 +1,22 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MoviesApi.Dto;
 using MoviesApi.Models;
 using MoviesApi.Services;
-using System.Dynamic;
 
 namespace MoviesApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class Movies : ControllerBase
     {
         private readonly IMoviesService _MoviesService;
         private readonly IGenresService _GenresService;
         private readonly IMapper _mapper;
-        private new List<string> _allowedExtention=new List<string> {".jpg",".png" };
-        private long _MaxAllowedSize=1048576; //1M 1024*1024
+        private new List<string> _allowedExtention = new List<string> { ".jpg", ".png" };
+        private long _MaxAllowedSize = 1048576; //1M 1024*1024
 
         public Movies(IMoviesService MoviesService, IGenresService GenresService, IMapper mapper)
         {
@@ -29,21 +26,23 @@ namespace MoviesApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync(){
+        public async Task<IActionResult> GetAllAsync()
+        {
 
-            var movie=await _MoviesService.GetAll();
+            var movie = await _MoviesService.GetAll();
             var data = _mapper.Map<IEnumerable<MovieDetailsDto>>(movie);
             return Ok(data);
         }
 
-         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id){
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
 
-            var movie=await _MoviesService.GetById(id);
-            if(movie==null)
+            var movie = await _MoviesService.GetById(id);
+            if (movie == null)
                 return NotFound($"item not found with id :{id}");
-              var  dto=_mapper.Map<MovieDetailsDto>(movie);
-           
+            var dto = _mapper.Map<MovieDetailsDto>(movie);
+
             return Ok(dto);
         }
 
@@ -56,76 +55,91 @@ namespace MoviesApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles ="Admin")]
-        public async Task<IActionResult> CreateAsync([FromForm]CreateMoviesDto dto){
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateAsync([FromForm] CreateMoviesDto dto)
+        {
 
             //Allow specific file extention to upload
-            if(!_allowedExtention.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
-            return BadRequest($"only jpg,png allowed !");
+            if (!_allowedExtention.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
+                return BadRequest($"only jpg,png allowed !");
 
             //Allow limited size
-            if(_MaxAllowedSize>1048576)
+            if (_MaxAllowedSize > 1048576)
                 return BadRequest($"the Max file size allowed is 1M !");
-            string imagePath=null;
-            var uploadsFolder=Path.Combine(Directory.GetCurrentDirectory(),"wwwroot/uploads");
+            string imagePath = null;
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Poster.FileName);
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            string uniqueFileName=Guid.NewGuid().ToString()+Path.GetExtension(dto.Poster.FileName);
-            string filePath=Path.Combine(uploadsFolder,uniqueFileName);
 
-            using(var stream=new FileStream(filePath, FileMode.Create))
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await dto.Poster.CopyToAsync(stream);
             }
-            imagePath=$"/uploads/{uniqueFileName}";
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            imagePath = $"{baseUrl}/uploads/{uniqueFileName}";
 
             // To valied GenreID
             var IsValidGenre = await _GenresService.IsValidGenre(dto.GenreId);
-            if(!IsValidGenre)
+            if (!IsValidGenre)
                 return BadRequest($"Invaild genre id !");
-           var movie=_mapper.Map<Movie>(dto);
-            movie.PosterUrl=imagePath;
-           _MoviesService.Add(movie);
-            return Ok (movie);
+            var movie = _mapper.Map<Movie>(dto);
+            movie.PosterUrl = imagePath;
+            _MoviesService.Add(movie);
+            return Ok(movie);
         }
 
-        //[HttpPut("{id}")]
-        //[Authorize(Roles ="Admin")]
-        //public async Task<IActionResult> UpdateAsync(int id, [FromForm]CreateMoviesDto dto)
-        //{
-        //     // To valied GenreID
-        //     var IsValidGenre = await _GenresService.IsValidGenre(dto.GenreId);
-        //    if(!IsValidGenre)
-        //        return BadRequest($"Invaild genre id !");
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateAsync(int id, [FromForm] CreateMoviesDto dto)
+        {
+            // To valied GenreID
+            var IsValidGenre = await _GenresService.IsValidGenre(dto.GenreId);
+            if (!IsValidGenre)
+                return BadRequest($"Invaild genre id !");
 
-        //var movie=await _MoviesService.GetById(id);
-        //    if (poster != null) { 
-        //    //Allow specific file extention to upload
-        //    if(!_allowedExtention.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
-        //    return BadRequest($"only jpg,png allowed !");
+            var movie = await _MoviesService.GetById(id);
+            if (dto.Poster != null)
+            {
+                //Allow specific file extention to upload
+                if (!_allowedExtention.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
+                    return BadRequest($"only jpg,png allowed !");
 
-        //    //Allow limited size
-        //    if(_MaxAllowedSize>1048576)
-        //        return BadRequest($"the Max file size allowed is 1M !");
+                //Allow limited size
+                if (_MaxAllowedSize > 1048576)
+                    return BadRequest($"the Max file size allowed is 1M !");
 
-        //     using var dataStream=new MemoryStream();
-        //     await dto.Poster.CopyToAsync(dataStream);
-        //    }
 
-        //    movie.Title=dto.Title;
-        //    movie.Year=dto.Year;
-        //    movie.Rate=dto.Rate;
-        //    movie.GenreId=dto.GenreId;
+            }
+            string imagePath = null;
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Poster.FileName);
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-        //    _MoviesService.Update(movie);
-        // return Ok(movie);
-        //}
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await dto.Poster.CopyToAsync(stream);
+            }
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            imagePath = $"{baseUrl}/uploads/{uniqueFileName}";
+
+            movie.Title = dto.Title;
+            movie.Year = dto.Year;
+            movie.Rate = dto.Rate;
+            movie.GenreId = dto.GenreId;
+            movie.PosterUrl = imagePath;
+            _MoviesService.Update(movie);
+            return Ok(movie);
+        }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> deleteAsync(int id)
         {
-         var movie = await _MoviesService.GetById(id);
-            if(movie==null)
+            var movie = await _MoviesService.GetById(id);
+            if (movie == null)
                 return NotFound($"item not found with id :{id}");
             _MoviesService.Delete(movie);
             return Ok();

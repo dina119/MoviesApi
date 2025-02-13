@@ -166,25 +166,9 @@
 				</div>
 
 				<div class="col-12">
-					<div class="owl-carousel home__carousel">
-						<div id="items-container"></div>
-						<script>
-                            async function arrayBufferToBase64(buffer) {
-                                // Ensure buffer is a Uint8Array
-                                const uint8Array = new Uint8Array(buffer);
-
-                                // Convert to a binary string
-                                let binary = "";
-                                uint8Array.forEach(byte => {
-                                    binary += String.fromCharCode(byte);
-                                });
-
-                                // Encode to Base64
-                                return btoa(binary);
-                            }
-
-
-						</script>
+					<div class="owl-carousel home__carousel" id="items-container">
+						
+						
 						<script>
 							// Function to fetch data from API
 							async function fetchData() {
@@ -199,14 +183,11 @@
                                    
 									data.forEach(async (movie) => {
                                        
-
-                                        // Convert byte array to Base64
-                                        imgSrc = `data:image/jpeg;base64,${await arrayBufferToBase64(movie.poster)}`;
 										const cardHTML = `
 								  <div class="item">
 									<div class="card card--big">
 									  <div class="card__cover">
-										<img src="${imgSrc}" alt="${movie.title}">
+										<img src="${movie.posterUrl}" alt="${movie.title}">
 										<a href="#" class="card__play">
 										  <i class="icon ion-ios-play"></i>
 										</a>
@@ -214,7 +195,8 @@
 									  <div class="card__content">
 										<h3 class="card__title"><a href="#">${movie.title}</a></h3>
 										<span class="card__category">
-										 
+										<a href="#">${movie.genreName}</a>
+										
 										</span>
 										<span class="card__rate"><i class="icon ion-ios-star"></i>${movie.rate}</span>
 									  </div>

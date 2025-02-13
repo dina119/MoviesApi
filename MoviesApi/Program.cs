@@ -122,7 +122,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseStaticFiles();
 
-
+app.UseFileServer();
 app.UseHttpsRedirection();
 //Add cors
 app.UseCors("AllowAll");
