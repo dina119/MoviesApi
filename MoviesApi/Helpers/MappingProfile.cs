@@ -10,7 +10,7 @@ namespace MoviesApi.Helpers
         {
             CreateMap<Movie,MovieDetailsDto>();
             CreateMap<CreateMoviesDto,Movie>()
-                .ForMember(src=>src.Poster,opt=>opt.Ignore());
+                .ForMember(src=>src.PosterUrl,opt=>opt.Ignore());
         }
     }
 }

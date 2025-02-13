@@ -66,51 +66,59 @@ namespace MoviesApi.Controllers
             //Allow limited size
             if(_MaxAllowedSize>1048576)
                 return BadRequest($"the Max file size allowed is 1M !");
+            string imagePath=null;
+            var uploadsFolder=Path.Combine(Directory.GetCurrentDirectory(),"wwwroot/uploads");
+
+            string uniqueFileName=Guid.NewGuid().ToString()+Path.GetExtension(dto.Poster.FileName);
+            string filePath=Path.Combine(uploadsFolder,uniqueFileName);
+
+            using(var stream=new FileStream(filePath, FileMode.Create))
+            {
+                await dto.Poster.CopyToAsync(stream);
+            }
+            imagePath=$"/uploads/{uniqueFileName}";
 
             // To valied GenreID
             var IsValidGenre = await _GenresService.IsValidGenre(dto.GenreId);
             if(!IsValidGenre)
                 return BadRequest($"Invaild genre id !");
-
-             using var dataStream=new MemoryStream();
-             await dto.Poster.CopyToAsync(dataStream);
            var movie=_mapper.Map<Movie>(dto);
-            movie.Poster=dataStream.ToArray();
+            movie.PosterUrl=imagePath;
            _MoviesService.Add(movie);
             return Ok (movie);
         }
 
-        [HttpPut("{id}")]
-        [Authorize(Roles ="Admin")]
-        public async Task<IActionResult> UpdateAsync(int id, [FromForm]CreateMoviesDto dto)
-        {
-             // To valied GenreID
-             var IsValidGenre = await _GenresService.IsValidGenre(dto.GenreId);
-            if(!IsValidGenre)
-                return BadRequest($"Invaild genre id !");
+        //[HttpPut("{id}")]
+        //[Authorize(Roles ="Admin")]
+        //public async Task<IActionResult> UpdateAsync(int id, [FromForm]CreateMoviesDto dto)
+        //{
+        //     // To valied GenreID
+        //     var IsValidGenre = await _GenresService.IsValidGenre(dto.GenreId);
+        //    if(!IsValidGenre)
+        //        return BadRequest($"Invaild genre id !");
 
-        var movie=await _MoviesService.GetById(id);
-            if (dto.Poster != null) { 
-            //Allow specific file extention to upload
-            if(!_allowedExtention.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
-            return BadRequest($"only jpg,png allowed !");
+        //var movie=await _MoviesService.GetById(id);
+        //    if (poster != null) { 
+        //    //Allow specific file extention to upload
+        //    if(!_allowedExtention.Contains(Path.GetExtension(dto.Poster.FileName).ToLower()))
+        //    return BadRequest($"only jpg,png allowed !");
 
-            //Allow limited size
-            if(_MaxAllowedSize>1048576)
-                return BadRequest($"the Max file size allowed is 1M !");
+        //    //Allow limited size
+        //    if(_MaxAllowedSize>1048576)
+        //        return BadRequest($"the Max file size allowed is 1M !");
 
-             using var dataStream=new MemoryStream();
-             await dto.Poster.CopyToAsync(dataStream);
-            }
+        //     using var dataStream=new MemoryStream();
+        //     await dto.Poster.CopyToAsync(dataStream);
+        //    }
 
-            movie.Title=dto.Title;
-            movie.Year=dto.Year;
-            movie.Rate=dto.Rate;
-            movie.GenreId=dto.GenreId;
+        //    movie.Title=dto.Title;
+        //    movie.Year=dto.Year;
+        //    movie.Rate=dto.Rate;
+        //    movie.GenreId=dto.GenreId;
 
-            _MoviesService.Update(movie);
-         return Ok(movie);
-        }
+        //    _MoviesService.Update(movie);
+        // return Ok(movie);
+        //}
 
         [HttpDelete("{id}")]
         [Authorize(Roles ="Admin")]
