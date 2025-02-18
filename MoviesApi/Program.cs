@@ -37,6 +37,11 @@ builder.Services.AddAutoMapper(typeof(Program));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.WithOrigins("https://localhost:7201").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+});
 //Edit in swaggerGen,add Authorize,edit title,add description,service and terms,contact
 builder.Services.AddSwaggerGen(options=>
 {
@@ -103,15 +108,16 @@ builder.Services.AddAuthentication(
             ValidateIssuerSigningKey=true,
             IssuerSigningKey=new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
         };
-    }
+        options.Events=new JwtBearerEvents
+        {
+            OnMessageReceived = context=>{
+                context.Token = context.Request.Cookies["AuthToken"] ;
+                return Task.CompletedTask;
+            }
+        };
+    } );
 
-    );
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

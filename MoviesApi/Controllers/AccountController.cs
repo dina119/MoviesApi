@@ -43,7 +43,42 @@ namespace MoviesApi.Controllers
             if (ModelState.IsValid) { 
             IdentityResult result= await _userManager.CreateAsync(user,UserDto.Password);
                 if (result.Succeeded) { 
-                    return Ok("Account Sign up succes");
+                     // claims Token
+                        var claims=new List<Claim>();
+                        claims.Add(new Claim(ClaimTypes.Name,user.UserName));
+                        claims.Add(new Claim(ClaimTypes.NameIdentifier,user.Id));
+                        claims.Add(new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()));
+                        //get role 
+                        var roles= await _userManager.GetRolesAsync(user);
+                        foreach (var item in roles)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role,item));
+                        }
+                        //signingCredentials
+                        SecurityKey key =new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWT:Key"])) ;
+                        SigningCredentials signingCred =new SigningCredentials(key,SecurityAlgorithms.HmacSha256);
+
+                        
+                        //create Token
+                        JwtSecurityToken mytoken =new JwtSecurityToken(
+                            issuer: config["JWT:Issuer"], //URL web api
+                            audience: config["JWT:Audience"], //URL for consumer
+                            claims:claims,
+                            expires:DateTime.Now.AddHours(1),
+                            signingCredentials:signingCred
+                            );
+                      var  StringToken =new JwtSecurityTokenHandler().WriteToken(mytoken);
+                        Response.Cookies.Append("AuthToken",StringToken,new CookieOptions
+                        {
+                          HttpOnly=true,
+                          SameSite=SameSiteMode.Strict,
+                          Expires=DateTime.Now.AddHours(1)
+                        });
+                        return Ok(new
+                        {
+                            
+                           Message="SignUP succesfull"
+                        });
                 }
                 return BadRequest(result.Errors.FirstOrDefault());
             }
@@ -92,13 +127,18 @@ namespace MoviesApi.Controllers
                             expires:DateTime.Now.AddHours(1),
                             signingCredentials:signingCred
                             );
+                      var  StringToken =new JwtSecurityTokenHandler().WriteToken(mytoken);
+                        Response.Cookies.Append("AuthToken",StringToken,new CookieOptions
+                        {
+                          HttpOnly=true,
+                          SameSite=SameSiteMode.Strict,
+                          Expires=DateTime.Now.AddHours(1)
+                        });
                         return Ok(new
                         {
-                            Token =new JwtSecurityTokenHandler().WriteToken(mytoken),
-                            expiration=mytoken.ValidTo
-                        }
-
-                            );
+                            
+                           Message="Login succesfull"
+                        });
                     }
                     
                 }
