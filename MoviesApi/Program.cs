@@ -57,34 +57,68 @@ builder.Services.AddSwaggerGen(options=>
             
         }
          });
-    options.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme()
+    //options.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme()
 
+    //    {
+    //    Name="Authorization",
+    //    Type=SecuritySchemeType.ApiKey,
+    //    Scheme="Bearer",
+    //    BearerFormat="JWT",
+    //    In=ParameterLocation.Header,
+    //    Description="Enter your JWT key",
+    //    });
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
         {
-        Name="Authorization",
-        Type=SecuritySchemeType.ApiKey,
-        Scheme="Bearer",
-        BearerFormat="JWT",
-        In=ParameterLocation.Header,
-        Description="Enter your JWT key",
-        });
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
+                TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    { "openid", "User authentication" },
+                    { "profile", "User profile information" },
+                    { "email", "User email address" }
+                }
+            }
+        }
+    });
+
+    //options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    //{
+    //    {
+    //        new OpenApiSecurityScheme
+    //        {
+    //            Reference=new OpenApiReference
+    //            {
+    //                Type=ReferenceType.SecurityScheme,
+    //                Id="Bearer"
+    //            }
+    //        },
+    //        new string[]{}
+             
+    //    }
+    //}
+    //    );
+
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference=new OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "oauth2"
                 }
             },
-            new string[]{}
-             
+            new List<string> { "openid", "profile", "email" }
         }
-    }
-        );
-});
+    });
 
+});
 
 builder.Services.AddAuthentication(
     options =>
@@ -94,7 +128,17 @@ builder.Services.AddAuthentication(
         options.DefaultScheme=JwtBearerDefaults.AuthenticationScheme;
     }
     
-    ).AddJwtBearer(options =>
+    ).AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    })
+    //.AddFacebook(options =>
+    //{
+    //    options.AppId = builder.Configuration["Authentication:Facebook:AppId"];
+    //    options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+    //})
+    .AddJwtBearer(options =>
     {
         
         options.SaveToken=true;

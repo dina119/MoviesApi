@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -146,6 +149,56 @@ namespace MoviesApi.Controllers
             }
             return Unauthorized();
         }
+
+         [HttpGet("login-google")]
+    public IActionResult LoginWithGoogle()
+    {
+        var redirectUrl = Url.Action(nameof(GoogleResponse), "AccountController");
+        var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    } 
+
+    [HttpGet("signin-google")]
+    public async Task<IActionResult> GoogleResponse()
+    {
+        var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        if (result?.Principal == null)
+            return Unauthorized();
+
+        var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+        var token = GenerateJwtToken(email);
+
+        Response.Cookies.Append("AuthToken", token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddHours(1)
+        });
+
+        return Ok(new { message = "Google login successful!" });
+    }
+
+        //Generate Token
+        private string GenerateJwtToken(string email)
+    {
+        var key = Encoding.UTF8.GetBytes(config["JWT:Key"]);
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: config["JWT:Issuer"],
+            audience: config["JWT:Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(60),
+            signingCredentials: new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
         [HttpPost("AssignRole")]
         [Authorize(Roles ="Admin")]
