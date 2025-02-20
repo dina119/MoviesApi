@@ -40,7 +40,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        policy => policy.WithOrigins("https://localhost:7201").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+        policy => policy.AllowAnyOrigin()  // ?? ???? ??? ???? (???????? ???)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 //Edit in swaggerGen,add Authorize,edit title,add description,service and terms,contact
 builder.Services.AddSwaggerGen(options=>
@@ -163,7 +165,7 @@ builder.Services.AddAuthentication(
 
 
 var app = builder.Build();
-
+app.UseCors("AllowAll");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -175,7 +177,7 @@ app.UseStaticFiles();
 app.UseFileServer();
 app.UseHttpsRedirection();
 //Add cors
-app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

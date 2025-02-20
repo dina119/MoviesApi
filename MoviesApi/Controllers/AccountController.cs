@@ -150,43 +150,56 @@ namespace MoviesApi.Controllers
             return Unauthorized();
         }
 
-         [HttpGet("login-google")]
-    public IActionResult LoginWithGoogle()
+[HttpGet("ExternalLogin")]
+
+public IActionResult ExternalLogin(string provider, string returnUrl)
+{
+    string redirectUri = Url.Action("ExternalLoginCallback", new { returnUrl });
+    return Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, provider);
+}
+
+   [HttpGet("ExternalLoginCallback")]
+
+public async Task<ActionResult<string>> ExternalLoginCallback(string returnUrl )
+{
+    var loginInfo = await HttpContext.AuthenticateAsync();
+    if (loginInfo == null)
     {
-        var redirectUrl = Url.Action(nameof(GoogleResponse), "AccountController");
-        var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
-        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
-    } 
-
-    [HttpGet("signin-google")]
-    public async Task<IActionResult> GoogleResponse()
+        return BadRequest("Login failed.");
+    }
+    var loginProvider = "Google";
+            var providerKey = loginInfo.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var user = await _userManager.FindByLoginAsync(loginProvider ,providerKey);
+    if (user == null)
     {
-        var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        if (result?.Principal == null)
-            return Unauthorized();
+        user = new ApplicationUser 
+        { 
+            UserName = loginInfo.Principal.Identity.Name, 
+            Email = loginInfo.Principal.FindFirst(ClaimTypes.Email)?.Value 
+        };
 
-        var email = result.Principal.FindFirstValue(ClaimTypes.Email);
-        var token = GenerateJwtToken(email);
-
-        Response.Cookies.Append("AuthToken", token, new CookieOptions
+        var result = await _userManager.CreateAsync(user);
+        if (!result.Succeeded)
         {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddHours(1)
-        });
+            return BadRequest(result.Errors);
+        }
 
-        return Ok(new { message = "Google login successful!" });
+        await _userManager.AddLoginAsync(user,new UserLoginInfo(loginProvider, providerKey, loginProvider));
     }
 
+    var token = GenerateJwtToken(user);
+    return Ok(new { token });
+}
+
+
         //Generate Token
-        private string GenerateJwtToken(string email)
+        private string GenerateJwtToken(ApplicationUser user)
     {
         var key = Encoding.UTF8.GetBytes(config["JWT:Key"]);
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+         new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email)
         };
 
         var token = new JwtSecurityToken(
