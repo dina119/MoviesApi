@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Microsoft.Build.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -40,7 +41,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        policy => policy
+        builder => builder
                          .AllowAnyOrigin() // ?? ???? ??? ???? (???????? ???)
                         .AllowAnyMethod()
                         .AllowAnyHeader()
@@ -108,7 +109,8 @@ builder.Services.AddAuthentication(
         options.DefaultAuthenticateScheme=JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme=JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme=JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultSignInScheme=JwtBearerDefaults.AuthenticationScheme;
+       
+        
         
     }
     
@@ -117,7 +119,7 @@ builder.Services.AddAuthentication(
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
         options.CallbackPath = new PathString("/ExternalLoginCallback"); // يجب أن يتطابق مع redirect_uri
-        
+        options.UsePkce=true;
         
     })
     //.AddFacebook(options =>
@@ -125,6 +127,8 @@ builder.Services.AddAuthentication(
     //    options.AppId = builder.Configuration["Authentication:Facebook:AppId"];
     //    options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
     //})
+
+
     .AddJwtBearer(options =>
     {
         
@@ -147,10 +151,17 @@ builder.Services.AddAuthentication(
             }
         };
     } );
-
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
 
 var app = builder.Build();
-app.UseCors("AllowAll");
+
 app.UseRouting();
 
 // Configure the HTTP request pipeline.
@@ -159,15 +170,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseFileServer();
-app.UseHttpsRedirection();
+
 //Add cors
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseCors("AllowAll");
 app.MapControllers();
 
 app.Run();
