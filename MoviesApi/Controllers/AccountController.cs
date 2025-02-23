@@ -22,14 +22,16 @@ namespace MoviesApi.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _RoleManager;
         private readonly IConfiguration config;
 
-        public AccountController(UserManager<ApplicationUser> userManager, IConfiguration config, RoleManager<IdentityRole> roleManager)
+        public AccountController(UserManager<ApplicationUser> userManager, IConfiguration config, RoleManager<IdentityRole> roleManager,SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             this.config = config;
             _RoleManager = roleManager;
+            _signInManager = signInManager;
         }
 
         [HttpPost("Register")]
@@ -154,41 +156,49 @@ namespace MoviesApi.Controllers
 
 public IActionResult ExternalLogin(string provider, string returnUrl)
 {
-    string redirectUri = Url.Action("ExternalLoginCallback", new { returnUrl });
-    return Challenge(new AuthenticationProperties { RedirectUri = redirectUri }, provider);
-}
+    var redirectUri = Url.Action("ExternalLoginCallback", new { returnUrl });
+        var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUri);
+        return Challenge(properties, provider);
+        }
 
    [HttpGet("ExternalLoginCallback")]
 
 public async Task<ActionResult<string>> ExternalLoginCallback(string returnUrl )
 {
-    var loginInfo = await HttpContext.AuthenticateAsync();
-    if (loginInfo == null)
-    {
-        return BadRequest("Login failed.");
-    }
-    var loginProvider = "Google";
-            var providerKey = loginInfo.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    var user = await _userManager.FindByLoginAsync(loginProvider ,providerKey);
-    if (user == null)
-    {
-        user = new ApplicationUser 
-        { 
-            UserName = loginInfo.Principal.Identity.Name, 
-            Email = loginInfo.Principal.FindFirst(ClaimTypes.Email)?.Value 
-        };
-
-        var result = await _userManager.CreateAsync(user);
-        if (!result.Succeeded)
+    var loginInfo = await _signInManager.GetExternalLoginInfoAsync();
+        if (loginInfo == null)
         {
-            return BadRequest(result.Errors);
+            return BadRequest("External login failed.");
         }
 
-        await _userManager.AddLoginAsync(user,new UserLoginInfo(loginProvider, providerKey, loginProvider));
-    }
+        var providerKey = loginInfo.ProviderKey;
+        var loginProvider = loginInfo.LoginProvider;
 
-    var token = GenerateJwtToken(user);
-    return Ok(new { token });
+        if (string.IsNullOrEmpty(providerKey))
+        {
+            return BadRequest("Invalid provider key.");
+        }
+
+        var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
+        if (user == null)
+        {
+            user = new ApplicationUser
+            {
+                UserName = loginInfo.Principal.Identity.Name.Replace(" ", "_"),
+                Email = loginInfo.Principal.FindFirstValue(ClaimTypes.Email)
+            };
+
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            await _userManager.AddLoginAsync(user, new UserLoginInfo(loginProvider, providerKey, loginProvider));
+        }
+
+        var token = GenerateJwtToken(user);
+        return Ok(new { token });
 }
 
 

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
@@ -40,9 +40,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin()  // ?? ???? ??? ???? (???????? ???)
+        policy => policy
+                         .WithOrigins("https://localhost:7201") // ?? ???? ??? ???? (???????? ???)
                         .AllowAnyMethod()
-                        .AllowAnyHeader());
+                        .AllowAnyHeader()
+                        .AllowCredentials());
 });
 //Edit in swaggerGen,add Authorize,edit title,add description,service and terms,contact
 builder.Services.AddSwaggerGen(options=>
@@ -59,66 +61,43 @@ builder.Services.AddSwaggerGen(options=>
             
         }
          });
-    //options.AddSecurityDefinition("Bearer",new OpenApiSecurityScheme()
 
+    //options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    //{
+    //    Type = SecuritySchemeType.OAuth2,
+    //    Flows = new OpenApiOAuthFlows
     //    {
-    //    Name="Authorization",
-    //    Type=SecuritySchemeType.ApiKey,
-    //    Scheme="Bearer",
-    //    BearerFormat="JWT",
-    //    In=ParameterLocation.Header,
-    //    Description="Enter your JWT key",
-    //    });
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
-    {
-        Type = SecuritySchemeType.OAuth2,
-        Flows = new OpenApiOAuthFlows
-        {
-            AuthorizationCode = new OpenApiOAuthFlow
-            {
-                AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
-                TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
-                Scopes = new Dictionary<string, string>
-                {
-                    { "openid", "User authentication" },
-                    { "profile", "User profile information" },
-                    { "email", "User email address" }
-                }
-            }
-        }
-    });
+    //        AuthorizationCode = new OpenApiOAuthFlow
+    //        {
+    //            AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
+    //            TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
+    //            Scopes = new Dictionary<string, string>
+    //            {
+    //                { "openid", "User authentication" },
+    //                { "profile", "User profile information" },
+    //                { "email", "User email address" }
+    //            }
+    //        }
+    //    }
+    //});
+
+
+    ///////////////////////
 
     //options.AddSecurityRequirement(new OpenApiSecurityRequirement
     //{
     //    {
     //        new OpenApiSecurityScheme
     //        {
-    //            Reference=new OpenApiReference
+    //            Reference = new OpenApiReference
     //            {
-    //                Type=ReferenceType.SecurityScheme,
-    //                Id="Bearer"
+    //                Type = ReferenceType.SecurityScheme,
+    //                Id = "oauth2"
     //            }
     //        },
-    //        new string[]{}
-             
+    //        new List<string> { "openid", "profile", "email" }
     //    }
-    //}
-    //    );
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "oauth2"
-                }
-            },
-            new List<string> { "openid", "profile", "email" }
-        }
-    });
+    //});
 
 });
 
@@ -128,12 +107,16 @@ builder.Services.AddAuthentication(
         options.DefaultAuthenticateScheme=JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme=JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme=JwtBearerDefaults.AuthenticationScheme;
+        
     }
     
     ).AddGoogle(options =>
     {
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        options.CallbackPath = new PathString("/ExternalLoginCallback"); // يجب أن يتطابق مع redirect_uri
+        
+        
     })
     //.AddFacebook(options =>
     //{
@@ -166,6 +149,8 @@ builder.Services.AddAuthentication(
 
 var app = builder.Build();
 app.UseCors("AllowAll");
+app.UseRouting();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
