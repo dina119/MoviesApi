@@ -223,6 +223,13 @@ public async Task<ActionResult<string>> ExternalLoginCallback(string returnUrl )
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+        [HttpGet("google-logout")]
+public IActionResult GoogleLogout()
+{
+    // إعادة التوجيه إلى صفحة تسجيل الخروج من Google
+    return Redirect("https://accounts.google.com/logout");
+}
+
         [HttpPost("AssignRole")]
         [Authorize(Roles ="Admin")]
          public async Task<IActionResult> AssignRoles(UserRoleDto Userdto)

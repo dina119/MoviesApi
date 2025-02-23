@@ -41,10 +41,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         policy => policy
-                         .WithOrigins("https://localhost:7201") // ?? ???? ??? ???? (???????? ???)
+                         .AllowAnyOrigin() // ?? ???? ??? ???? (???????? ???)
                         .AllowAnyMethod()
                         .AllowAnyHeader()
-                        .AllowCredentials());
+                       
+                        );
 });
 //Edit in swaggerGen,add Authorize,edit title,add description,service and terms,contact
 builder.Services.AddSwaggerGen(options=>
@@ -107,6 +108,7 @@ builder.Services.AddAuthentication(
         options.DefaultAuthenticateScheme=JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme=JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme=JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme=JwtBearerDefaults.AuthenticationScheme;
         
     }
     
