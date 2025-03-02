@@ -154,8 +154,10 @@ namespace MoviesApi.Controllers
 
 [HttpGet("ExternalLogin")]
 
-public IActionResult ExternalLogin(string provider, string returnUrl)
+public IActionResult ExternalLogin()
 {
+          string  provider="Google";
+         string   returnUrl="/";
     var redirectUri = Url.Action("ExternalLoginCallback", new { returnUrl });
         var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUri);
         return Challenge(properties, provider);
@@ -163,7 +165,7 @@ public IActionResult ExternalLogin(string provider, string returnUrl)
 
    [HttpGet("ExternalLoginCallback")]
 
-public async Task<ActionResult<string>> ExternalLoginCallback(string returnUrl )
+public async Task<ActionResult<string>> ExternalLoginCallback(/*string returnUrl*/ )
 {
     var loginInfo = await _signInManager.GetExternalLoginInfoAsync();
         if (loginInfo == null)

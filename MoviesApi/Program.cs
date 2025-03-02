@@ -64,42 +64,42 @@ builder.Services.AddSwaggerGen(options=>
         }
          });
 
-    //options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
-    //{
-    //    Type = SecuritySchemeType.OAuth2,
-    //    Flows = new OpenApiOAuthFlows
-    //    {
-    //        AuthorizationCode = new OpenApiOAuthFlow
-    //        {
-    //            AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
-    //            TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
-    //            Scopes = new Dictionary<string, string>
-    //            {
-    //                { "openid", "User authentication" },
-    //                { "profile", "User profile information" },
-    //                { "email", "User email address" }
-    //            }
-    //        }
-    //    }
-    //});
+    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("https://localhost:7201/api/Account/ExternalLogin"),
+                TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    { "openid", "User authentication" },
+                    { "profile", "User profile information" },
+                    { "email", "User email address" }
+                }
+            }
+        }
+    });
 
 
     ///////////////////////
 
-    //options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    //{
-    //    {
-    //        new OpenApiSecurityScheme
-    //        {
-    //            Reference = new OpenApiReference
-    //            {
-    //                Type = ReferenceType.SecurityScheme,
-    //                Id = "oauth2"
-    //            }
-    //        },
-    //        new List<string> { "openid", "profile", "email" }
-    //    }
-    //});
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "oauth2"
+                }
+            },
+            new List<string> { "openid", "profile", "email" }
+        }
+    });
 
 });
 
@@ -170,6 +170,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -179,7 +180,7 @@ app.UseFileServer();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowAll");
+
 app.MapControllers();
 
 app.Run();

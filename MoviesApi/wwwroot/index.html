@@ -173,7 +173,9 @@
 							// Function to fetch data from API
 							async function fetchData() {
 								try {
-                                    const response = await fetch("https://localhost:7201/api/Movies"); // Replace with your API URL
+									const response = await fetch("https://localhost:7201/api/Movies", {
+										mode: 'no-cors'
+									}); // Replace with your API URL
 									const data = await response.json();
 
 
