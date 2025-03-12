@@ -14,6 +14,6 @@ namespace MoviesApi.Models
         public string PosterUrl { get;set;}
         public byte GenreId { get;set;}
         public Genre Genre { get;set;}
-
+         public virtual List<Review> Reviews { get; set; }
     }
 }
