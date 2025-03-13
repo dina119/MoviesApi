@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.Dto;
 using MoviesApi.Models;
+using MoviesApi.Services;
 using System.Security.Claims;
 
 namespace MoviesApi.Controllers
@@ -13,33 +14,19 @@ namespace MoviesApi.Controllers
     [ApiController]
     public class ReviewController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        public ReviewController(ApplicationDbContext context)
+        
+        private readonly IReviewService _reviewService;
+        public ReviewController(ApplicationDbContext context, IReviewService reviewService)
         {
-            _context=context;
+           
+            _reviewService = reviewService;
         }
 
         [HttpGet("{MovieId}")]
         public async Task<IActionResult> GetAllReviews(int MovieId)
         {
-            var movie=_context.Movies.Find(MovieId);
-            if (movie == null)
-            {
-                return BadRequest("Movie not found");
-            }
-            var reviews = await _context.Reviews
-        .Where(r => r.MovieId == MovieId)
-        .Include(r => r.User) // لجلب بيانات المستخدم
-        .Select(r => new GettReviewsDto
-        {
-           Username=r.User.UserName,
-           rate=r.rate,
-           title=r.title,
-           desription=r.desription,
-           CreatedAt=r.CreatedAt
-           
-        })
-        .ToListAsync();
+            
+            var reviews = await _reviewService.GetReviewsByMovieId(MovieId);
          return Ok(reviews);
         }
 
@@ -64,8 +51,7 @@ namespace MoviesApi.Controllers
              };
 
              
-           await _context.Reviews.AddAsync(review);
-            _context.SaveChanges();
+           await _reviewService.AddReview(review);
 
             return Ok();
 
@@ -75,13 +61,13 @@ namespace MoviesApi.Controllers
         [HttpPut("{ReviewId}")]
         public async Task<IActionResult> EditReview(int ReviewId,[FromBody] CreateReviewDto dto)
         {
-              var UserId= User.FindFirst(ClaimTypes.NameIdentifier).Value;
-             
+              var UserId=User.FindFirst(ClaimTypes.NameIdentifier).Value;
+         if (UserId==null)     
     {
         return Unauthorized("User is not logged in.");
     }
-            var review=  _context.Reviews.Find(ReviewId);
-            if (review.UserId != UserId)
+            var review=await  _reviewService.FindReview(ReviewId);
+            if (review.UserId!= UserId)
             {
                 return Forbid();
             }
@@ -98,7 +84,7 @@ namespace MoviesApi.Controllers
               review.desription=dto.desription
 
              ;
-             _context.SaveChanges();
+             _reviewService.UpdateReview(review);
             return Ok();
         }
 
@@ -108,7 +94,7 @@ namespace MoviesApi.Controllers
         {
              var UserId= User.FindFirst(ClaimTypes.NameIdentifier).Value;
    
-            var review=_context.Reviews.Find(ReviewId);
+            var review=await _reviewService.FindReview(ReviewId);
              if (review.UserId != UserId)
             {
                 return Forbid();
@@ -117,8 +103,7 @@ namespace MoviesApi.Controllers
             {
                 return BadRequest("movie review not found");
             }
-            _context.Reviews.Remove(review);
-            _context.SaveChanges();
+            _reviewService.RemoveReview(review);
             return Ok();
 
         }

@@ -30,6 +30,7 @@ builder.Configuration.GetSection("JWT");
 builder.Services.AddIdentity<ApplicationUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddTransient<IGenresService,GenresService>();
 builder.Services.AddTransient<IMoviesService,MoviesService>();
+builder.Services.AddTransient<IReviewService,ReviewService>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
