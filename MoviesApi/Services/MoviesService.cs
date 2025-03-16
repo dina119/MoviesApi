@@ -57,5 +57,19 @@ namespace MoviesApi.Services
    return movie.Include(m=>m.Genre).ToListAsync(); // Execute query and return data.
 
         }
+
+        public   Task<List<Movie>> Filter(double? rate, int? year)
+        {
+            var moviee=_context.Movies.AsQueryable();
+            if (rate !=null) 
+             moviee= moviee.Where(m=>m.Rate==rate);
+            
+            if (year != null)  
+             moviee=  moviee.Where(m=>m.Year==year);
+            
+            return moviee.Include(m=>m.Genre).ToListAsync();
+
+
+        }
     }
 }

@@ -8,7 +8,7 @@ namespace MoviesApi.Models
         [MaxLength(250)]
         public string Title { get;set;}
         public int Year { get;set;}
-        public byte Rate { get;set;}
+        public double Rate { get;set;}
         [MaxLength(250)]
         public string StoreLine { get;set;}
         public string PosterUrl { get;set;}

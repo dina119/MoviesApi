@@ -65,6 +65,15 @@ namespace MoviesApi.Controllers
             return Ok(data);
         }
 
+        [HttpGet("Filter")]
+         public async Task<IActionResult> FilterMovies(double? rate,int? year)
+        {
+
+            var movie = await _MoviesService.Filter(rate,year);
+            var data = _mapper.Map<IEnumerable<MovieDetailsDto>>(movie);
+            return Ok(data);
+        }
+
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateAsync([FromForm] CreateMoviesDto dto)
