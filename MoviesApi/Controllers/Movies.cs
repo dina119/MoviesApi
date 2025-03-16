@@ -15,14 +15,16 @@ namespace MoviesApi.Controllers
         private readonly IMoviesService _MoviesService;
         private readonly IGenresService _GenresService;
         private readonly IMapper _mapper;
+        // private readonly ApplicationDbContext _context;
         private new List<string> _allowedExtention = new List<string> { ".jpg", ".png" };
         private long _MaxAllowedSize = 1048576; //1M 1024*1024
 
-        public Movies(IMoviesService MoviesService, IGenresService GenresService, IMapper mapper)
+        public Movies(IMoviesService MoviesService, IGenresService GenresService, IMapper mapper, ApplicationDbContext context)
         {
             _MoviesService = MoviesService;
             _GenresService = GenresService;
             _mapper = mapper;
+           // _context = context;
         }
 
         [HttpGet]
@@ -51,6 +53,14 @@ namespace MoviesApi.Controllers
         public async Task<IActionResult> GetByGenreId(byte genreId)
         {
             var movie = await _MoviesService.GetAll(genreId);
+            var data = _mapper.Map<IEnumerable<MovieDetailsDto>>(movie);
+            return Ok(data);
+        }
+
+        [HttpGet("Search")]
+         public async Task<IActionResult> SearchMovies(string? Title, int? Year,string? genreName)
+        {
+         var movie = await _MoviesService.Search(Title,Year, genreName);
             var data = _mapper.Map<IEnumerable<MovieDetailsDto>>(movie);
             return Ok(data);
         }

@@ -42,5 +42,20 @@ namespace MoviesApi.Services
             _context.SaveChanges();
             return movie ;
         }
+
+        public Task<List<Movie>> Search(string? Title, int? Year, string?  genreName)
+        {
+        var movie = _context.Movies.AsQueryable();
+
+    if (Title != null)
+        movie = movie.Where(m => m.Title == Title);
+    if (Year != null)
+        movie = movie.Where(m => m.Year == Year);
+    if ( genreName != null)
+        movie = movie.Where(m => m.Genre.Name ==  genreName);
+
+   return movie.Include(m=>m.Genre).ToListAsync(); // Execute query and return data.
+
+        }
     }
 }
