@@ -96,5 +96,16 @@ namespace MoviesApi.Controllers
             return Ok();
 
         }
+
+        [HttpGet("{movieId}")]
+public async Task<IActionResult> GetMovieRating(int movieId)
+{
+    var averageRating = await _context.Rates
+        .Where(r => r.MovieId == movieId)
+        .AverageAsync(r => (double?)r.RateNum) ?? 0;
+
+    return Ok(new { AverageRating = averageRating });
+}
+
     }
 }

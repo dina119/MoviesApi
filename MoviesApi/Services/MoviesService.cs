@@ -6,10 +6,11 @@ namespace MoviesApi.Services
     public class MoviesService : IMoviesService
     {
          private readonly ApplicationDbContext _context;
-
-        public MoviesService(ApplicationDbContext context)
+        private double _rate;
+        public MoviesService(ApplicationDbContext context,double rate)
         {
             _context = context;
+           
         }
 
         public async Task<Movie> Add(Movie movie)
@@ -33,6 +34,7 @@ namespace MoviesApi.Services
 
         public async Task<IEnumerable<Movie>> GetAll(byte genreId=0)
         {
+           
             return await _context.Movies.Where(m=>m.GenreId==genreId||genreId==0).OrderByDescending(m=>m.Rate).Include(m=>m.Genre).ToListAsync();
         }
 

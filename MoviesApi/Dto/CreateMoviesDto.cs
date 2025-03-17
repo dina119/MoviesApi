@@ -4,7 +4,9 @@ namespace MoviesApi.Dto
 {
     public class CreateMoviesDto
     {
-         [MaxLength(250)]
+       
+
+        [MaxLength(250)]
         public string Title { get;set;}
         public int Year { get;set;}
         public byte Rate { get;set;}
