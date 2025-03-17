@@ -9,6 +9,7 @@ namespace MoviesApi.Helpers
         public MappingProfile()
         {
             CreateMap<Movie,MovieDetailsDto>();
+            CreateMap<RateDto,Rate>();
             CreateMap<CreateMoviesDto,Movie>()
                 .ForMember(src=>src.PosterUrl,opt=>opt.Ignore());
         }

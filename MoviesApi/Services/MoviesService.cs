@@ -6,8 +6,8 @@ namespace MoviesApi.Services
     public class MoviesService : IMoviesService
     {
          private readonly ApplicationDbContext _context;
-        private double _rate;
-        public MoviesService(ApplicationDbContext context,double rate)
+       
+        public MoviesService(ApplicationDbContext context)
         {
             _context = context;
            

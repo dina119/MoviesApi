@@ -31,8 +31,12 @@ builder.Services.AddIdentity<ApplicationUser,IdentityRole>().AddEntityFrameworkS
 builder.Services.AddTransient<IGenresService,GenresService>();
 builder.Services.AddTransient<IMoviesService,MoviesService>();
 builder.Services.AddTransient<IReviewService,ReviewService>();
+builder.Services.AddTransient<IRateServices,RateServices>();
+builder.Services.AddScoped<IRateServices,RateServices>();
 
 builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.AddHttpContextAccessor();
 
 
 

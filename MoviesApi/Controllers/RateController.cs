@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoviesApi.Dto;
 using MoviesApi.Models;
+using MoviesApi.Services;
 using System.Security.Claims;
 
 namespace MoviesApi.Controllers
@@ -12,36 +13,39 @@ namespace MoviesApi.Controllers
     [ApiController]
     public class RateController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        
+       // private readonly ApplicationDbContext _context;
+        private readonly IMoviesService _MoviesService;
+        private readonly IRateServices _RateService;
+        private readonly IMapper _mapper;
 
-        public RateController(ApplicationDbContext context)
+
+
+        public RateController(ApplicationDbContext context, IMoviesService moviesService, IRateServices rateService, IMapper mapper)
         {
-            _context = context;
-            
+            _MoviesService = moviesService;
+            _RateService = rateService;
+            _mapper = mapper;
+             //_context = context;
+
+
         }
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> AddRate([FromBody]RateDto dto)
+        public async Task<IActionResult> AddRate([FromBody] RateDto dto)
         {
-             var UserId= User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var movie=_context.Movies.Find(dto.MovieId);
-           // var rate=_context.Rates.Where(r=>r.MovieId==dto.MovieId&&r.UserId==UserId).ToList();
-            if (movie != null) { 
-                var rateExisist=_context.Rates.FirstOrDefault(r=>r.UserId==UserId&&r.MovieId==dto.MovieId);
-                if (rateExisist == null) { 
-             var UserRate=new Rate
-             {
-                 MovieId=dto.MovieId,
-                 RateNum=dto.RateNum,
-                 UserId=UserId,
-                 
-             };
-            _context.Rates.Add(UserRate);
-            _context.SaveChanges();
-            return Ok();
+            var UserId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var movie = await _MoviesService.GetById(dto.MovieId);
+            if (movie != null)
+            {
+                var rateExisist = await _RateService.CheckRateExist(dto);
+                if (rateExisist == null)
+                {
+                    var UserRate = _mapper.Map<Rate>(dto);
+                    UserRate.UserId = UserId;
+                    await _RateService.AddRate(UserRate);
+                    return Ok();
                 }
-                return BadRequest();
+                return BadRequest("Doublicate Rate");
             }
             else
             {
@@ -51,61 +55,50 @@ namespace MoviesApi.Controllers
 
         [Authorize]
         [HttpPut]
-        public  async Task<IActionResult> editRate([FromBody]RateEditDto dto,int RateId)
+        public async Task<IActionResult> editRate([FromBody] RateEditDto dto, int RateId)
         {
-             var UserId= User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var UserRate=_context.Rates.Find(RateId);
-            
-            if (UserRate.UserId!=UserId)
+            var UserId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var UserRate = _RateService.FindRate(RateId);
+            if (UserRate.Result.UserId != UserId)
             {
                 return Forbid();
-
             }
-            UserRate.RateNum=dto.RateNum;
-            
-            _context.Update(UserRate);
-            _context.SaveChanges();
+            UserRate.Result.RateNum = dto.RateNum;
+            _RateService.UpdateRate(UserRate.Result);
             return Ok();
         }
+
         [HttpGet]
         public async Task<IActionResult> GetMovieRate(int MovieID)
         {
-            var MovieRates = _context.Rates.Where(r => r.MovieId == MovieID).Include(r=>r.User).Select(r=>
-            new GetRatesDto
-            {
-                RateNum=r.RateNum,
-                UserId=r.UserId,
-                Username=r.User.UserName
-            }
-            ).ToList();
+            var MovieRates = await _RateService.GetRateByMovieId(MovieID);
+
             return Ok(MovieRates);
+
         }
+
         [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteRate(int RateId)
         {
-             var UserId= User.FindFirst(ClaimTypes.NameIdentifier).Value;
-           // var UserRate=_context.Rates.Where(r=>r.id==RateId&&r.UserId==UserId);
-            var UserRate=_context.Rates.Find(RateId);
-            if (UserRate.UserId != UserId)
+            var UserId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var UserRate = _RateService.FindRate(RateId);
+            if (UserRate.Result.UserId != UserId)
             {
                 return Forbid();
             }
-           _context.Rates.Remove(UserRate);
-            _context.SaveChanges();
+             _RateService.RemoveRate(UserRate.Result);
             return Ok();
 
         }
 
         [HttpGet("{movieId}")]
-public async Task<IActionResult> GetMovieRating(int movieId)
-{
-    var averageRating = await _context.Rates
-        .Where(r => r.MovieId == movieId)
-        .AverageAsync(r => (double?)r.RateNum) ?? 0;
+        public async Task<IActionResult> MovieAverageRating(int movieId)
+        {
+            var averageRating =_RateService.AverageRate(movieId);
 
-    return Ok(new { AverageRating = averageRating });
-}
+            return Ok(new { AverageRating = averageRating.Result });
+        }
 
     }
 }
