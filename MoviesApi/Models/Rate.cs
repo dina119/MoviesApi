@@ -1,15 +1,12 @@
 ﻿namespace MoviesApi.Models
 {
-    public class Review
+    public class Rate
     {
      public int id { set;get;}
      public string UserId { get; set; }
-     public string title { set;get;}
-     public string desription { set;get;}
-     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int  RateNum { get;set;}//From 1 to 5
      public int MovieId { get; set; }
      public virtual Movie Movie { get; set; }
      public virtual ApplicationUser User { get; set; }
-
     }
 }

@@ -43,7 +43,6 @@ namespace MoviesApi.Controllers
              {
               UserId=UserId,
             CreatedAt=DateTime.Now,
-              rate=dto.rate,
               MovieId=dto.MovieId,
               title=dto.title,
               desription=dto.desription
@@ -78,10 +77,10 @@ namespace MoviesApi.Controllers
              
              review.UserId=UserId;
               review.CreatedAt=DateTime.Now;
-              review.rate=dto.rate;
               review.MovieId=dto.MovieId;
               review.title=dto.title;
               review.desription=dto.desription
+                
 
              ;
              _reviewService.UpdateReview(review);

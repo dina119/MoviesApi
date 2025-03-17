@@ -33,7 +33,6 @@ namespace MoviesApi.Services
         .Select(r => new GettReviewsDto
         {
            Username=r.User.UserName,
-           rate=r.rate,
            title=r.title,
            desription=r.desription,
            CreatedAt=r.CreatedAt
