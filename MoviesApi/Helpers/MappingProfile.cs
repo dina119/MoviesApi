@@ -10,6 +10,7 @@ namespace MoviesApi.Helpers
         {
             CreateMap<Movie,MovieDetailsDto>();
             CreateMap<RateDto,Rate>();
+            CreateMap<AddToWatchListDto,WatchList>();
             CreateMap<CreateMoviesDto,Movie>()
                 .ForMember(src=>src.PosterUrl,opt=>opt.Ignore());
         }

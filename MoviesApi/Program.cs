@@ -11,6 +11,9 @@ using MoviesApi.Models;
 using MoviesApi.Services;
 using System.Configuration;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +28,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(
     );
 
 builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null; // تأكد من استخدام الـ PascalCase الصحيح
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
+
+
 
 builder.Configuration.GetSection("JWT");
 builder.Services.AddIdentity<ApplicationUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
@@ -32,11 +44,21 @@ builder.Services.AddTransient<IGenresService,GenresService>();
 builder.Services.AddTransient<IMoviesService,MoviesService>();
 builder.Services.AddTransient<IReviewService,ReviewService>();
 builder.Services.AddTransient<IRateServices,RateServices>();
+builder.Services.AddTransient<IWatchListServices,WatchListServices>();
 builder.Services.AddScoped<IRateServices,RateServices>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 
 
 
