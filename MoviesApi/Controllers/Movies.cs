@@ -15,7 +15,6 @@ namespace MoviesApi.Controllers
         private readonly IMoviesService _MoviesService;
         private readonly IGenresService _GenresService;
         private readonly IMapper _mapper;
-        // private readonly ApplicationDbContext _context;
         private new List<string> _allowedExtention = new List<string> { ".jpg", ".png" };
         private long _MaxAllowedSize = 1048576; //1M 1024*1024
 
@@ -24,7 +23,6 @@ namespace MoviesApi.Controllers
             _MoviesService = MoviesService;
             _GenresService = GenresService;
             _mapper = mapper;
-           // _context = context;
         }
 
         [HttpGet]
@@ -34,6 +32,7 @@ namespace MoviesApi.Controllers
 
             var movie = await _MoviesService.GetAll();
             var data = _mapper.Map<IEnumerable<MovieDetailsDto>>(movie);
+            
             return Ok(data);
         }
 
@@ -66,10 +65,10 @@ namespace MoviesApi.Controllers
         }
 
         [HttpGet("Filter")]
-         public async Task<IActionResult> FilterMovies(double? rate,int? year)
+         public async Task<IActionResult> FilterMovies(int? year)
         {
 
-            var movie = await _MoviesService.Filter(rate,year);
+            var movie = await _MoviesService.Filter(year);
             var data = _mapper.Map<IEnumerable<MovieDetailsDto>>(movie);
             return Ok(data);
         }
@@ -147,7 +146,6 @@ namespace MoviesApi.Controllers
 
             movie.Title = dto.Title;
             movie.Year = dto.Year;
-            movie.Rate = dto.Rate;
             movie.GenreId = dto.GenreId;
             movie.PosterUrl = imagePath;
             _MoviesService.Update(movie);

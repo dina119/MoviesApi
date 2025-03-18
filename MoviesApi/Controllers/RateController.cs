@@ -13,7 +13,6 @@ namespace MoviesApi.Controllers
     [ApiController]
     public class RateController : ControllerBase
     {
-       // private readonly ApplicationDbContext _context;
         private readonly IMoviesService _MoviesService;
         private readonly IRateServices _RateService;
         private readonly IMapper _mapper;
@@ -25,10 +24,8 @@ namespace MoviesApi.Controllers
             _MoviesService = moviesService;
             _RateService = rateService;
             _mapper = mapper;
-             //_context = context;
-
-
         }
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> AddRate([FromBody] RateDto dto)
@@ -95,9 +92,9 @@ namespace MoviesApi.Controllers
         [HttpGet("{movieId}")]
         public async Task<IActionResult> MovieAverageRating(int movieId)
         {
-            var averageRating =_RateService.AverageRate(movieId);
+            var averageRating =await _RateService.AverageRate(movieId);
 
-            return Ok(new { AverageRating = averageRating.Result });
+            return Ok(new { AverageRating = averageRating});
         }
 
     }

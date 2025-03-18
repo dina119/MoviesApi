@@ -47,6 +47,7 @@ builder.Services.AddTransient<IRateServices,RateServices>();
 builder.Services.AddTransient<IWatchListServices,WatchListServices>();
 builder.Services.AddScoped<IRateServices,RateServices>();
 
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddHttpContextAccessor();

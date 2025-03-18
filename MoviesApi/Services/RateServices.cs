@@ -11,10 +11,12 @@ namespace MoviesApi.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IHttpContextAccessor _Access;
-        public RateServices(ApplicationDbContext context, IHttpContextAccessor access)
+         private readonly IServiceScopeFactory _serviceScopeFactory;
+        public RateServices(ApplicationDbContext context, IHttpContextAccessor access, IServiceScopeFactory serviceScopeFactory)
         {
             _context = context;
             _Access = access;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         public async Task<Rate> AddRate(Rate rate)
@@ -27,10 +29,16 @@ namespace MoviesApi.Services
 
         public async Task<double> AverageRate(int Movieid)
         {
-            var result= await _context.Rates
+          using (var scope = _serviceScopeFactory.CreateScope()) 
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var result = await context.Rates
                 .Where(r => r.MovieId == Movieid)
                 .AverageAsync(r => (double?)r.RateNum) ?? 0;
+
             return result;
+        }
         }
 
         public async Task<Rate> CheckRateExist(RateDto dto)

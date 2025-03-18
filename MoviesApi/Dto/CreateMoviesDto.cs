@@ -9,7 +9,6 @@ namespace MoviesApi.Dto
         [MaxLength(250)]
         public string Title { get;set;}
         public int Year { get;set;}
-        public byte Rate { get;set;}
         [MaxLength(250)]
         public string StoreLine { get;set;}
         public IFormFile? Poster { get;set;}
